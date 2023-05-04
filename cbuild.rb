@@ -15,9 +15,36 @@ def processBuildDir(buildPath)
   end
 end
 
-def buildProject(projectDir)
-  abort("CMake failure") unless system("cmake #{projectDir}")
-  abort("Make failure") unless system("make")
+def invokeMetaBuild(projectPath, buildPath)
+  metaBuilder = nil
+  metaBuilder = "qmake" unless Dir.glob("*", base: projectPath).empty?()
+  metaBuilder = "cmake" if File.exist?(File.join(projectPath, "CMakeLists.txt"))
+
+  unless metaBuilder.nil?()
+    abort("Meta build failure") unless system("#{metaBuilder} #{projectPath}")
+    return
+  end
+
+  # We didn't find any known metabuild system. But maybe there's no metabuild system
+  # Let's just prepare for building
+  puts("Cannot find any metabuild system. Trying to build without")
+
+  projectFiles = Dir.glob("*", base: projectPath).map do |name|
+    File.join(projectPath, name)
+  end
+
+  FileUtils.cp_r(projectFiles, File.join(buildPath, "."))
+end
+
+def buildProject(buildPath)
+  builder = nil
+  builder = "make" if File.exist?(File.join(buildPath, "Makefile"))
+
+  unless builder.nil?()
+    abort("Make failure") unless system(builder)
+  end
+
+  abort("Cannot determine used build system")
 end
 
 def main()
@@ -36,7 +63,9 @@ def main()
   # TODO: make this action optional
   # FileUtils.rm_rf(File.join(buildPath, "."), verbose: true, secure: true)
 
-  buildProject(srcPath)
+  invokeMetaBuild(srcPath, buildPath)
+  buildProject(buildPath)
+
 end
 
 main()
