@@ -17,9 +17,11 @@ end
 
 def invokeMetaBuild(projectPath, buildPath)
   metaBuilder = nil
-  metaBuilder = "qmake" unless Dir.glob("*", base: projectPath).empty?()
+  metaBuilder = "qmake" unless Dir.glob("*.pro", base: projectPath).empty?()
   metaBuilder = "cmake" if File.exist?(File.join(projectPath, "CMakeLists.txt"))
 
+  puts(metaBuilder)
+  
   unless metaBuilder.nil?()
     abort("Meta build failure") unless system("#{metaBuilder} #{projectPath}")
     return
