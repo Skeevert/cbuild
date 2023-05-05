@@ -44,6 +44,7 @@ def buildProject(buildPath)
 
   unless builder.nil?()
     abort("Make failure") unless system(builder)
+    return
   end
 
   abort("Cannot determine used build system")
